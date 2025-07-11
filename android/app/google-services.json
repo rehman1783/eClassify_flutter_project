@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "406051761829",
+    "project_id": "eclassify-flutter-project",
+    "storage_bucket": "eclassify-flutter-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:406051761829:android:0ac302533577851947e74c",
+        "android_client_info": {
+          "package_name": "com.eclassify.wrteam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBZEoor_MnhBq1_wFkR7_D4IEMNAROSj0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
