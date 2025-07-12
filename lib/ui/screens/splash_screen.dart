@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:eClassify/app/routes.dart';
 import 'package:eClassify/data/cubits/system/fetch_language_cubit.dart';
@@ -19,17 +20,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// ✅ Missing class added
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({this.itemSlug, super.key, this.sellerId});
-
-  //Used when the app is terminated and then is opened using deep link, in which case
-  //the main route needs to be added to navigation stack, previously it directly used to
-  //push adDetails route.
   final String? itemSlug;
   final String? sellerId;
 
+  const SplashScreen({Key? key, this.itemSlug, this.sellerId})
+      : super(key: key);
+
   @override
-  SplashScreenState createState() => SplashScreenState();
+  State<SplashScreen> createState() => SplashScreenState();
 }
 
 class SplashScreenState extends State<SplashScreen>
@@ -37,24 +37,40 @@ class SplashScreenState extends State<SplashScreen>
   bool isTimerCompleted = false;
   bool isSettingsLoaded = false;
   bool isLanguageLoaded = false;
+  bool isNavigated = false;
   late StreamSubscription<List<ConnectivityResult>> subscription;
   bool hasInternet = true;
 
   @override
   void initState() {
-    //locationPermission();
     super.initState();
 
-    subscription = Connectivity().onConnectivityChanged.listen((result) {
-      setState(() {
-        hasInternet = (!result.contains(ConnectivityResult.none));
+    hasInternet = true;
+    startTimer();
+
+    try {
+      subscription = Connectivity().onConnectivityChanged.listen((result) {
+        setState(() {
+          hasInternet = (!result.contains(ConnectivityResult.none));
+        });
+        if (hasInternet) {
+          context
+              .read<FetchSystemSettingsCubit>()
+              .fetchSettings(forceRefresh: true);
+        }
       });
-      if (hasInternet) {
-        context
-            .read<FetchSystemSettingsCubit>()
-            .fetchSettings(forceRefresh: true);
-        startTimer();
-      }
+    } catch (e) {
+      log("Connectivity check failed: $e");
+    }
+
+    // Fallback timeout
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!mounted || isNavigated) return;
+      log("Force navigation fallback triggered.");
+      isTimerCompleted = true;
+      isSettingsLoaded = true;
+      isLanguageLoaded = true;
+      navigateToScreen();
     });
   }
 
@@ -64,24 +80,24 @@ class SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  Future getDefaultLanguage(String code) async {
+  Future<void> getDefaultLanguage(String code) async {
     try {
-      if (HiveUtils.getLanguage() == null ||
-          HiveUtils.getLanguage()?['data'] == null) {
+      var language = HiveUtils.getLanguage();
+      if (language == null || language['data'] == null) {
         context.read<FetchLanguageCubit>().getLanguage(code);
-      } else if (HiveUtils.isUserFirstTime() &&
-          code != HiveUtils.getLanguage()?['code']) {
+      } else if (HiveUtils.isUserFirstTime() && code != language['code']) {
         context.read<FetchLanguageCubit>().getLanguage(code);
       } else {
         isLanguageLoaded = true;
-        setState(() {});
+        if (mounted) setState(() {});
       }
     } catch (e) {
-      log("Error while load default language $e");
+      log("Error while loading default language: $e");
+      isLanguageLoaded = true;
     }
   }
 
-  Future<void> startTimer() async {
+  void startTimer() {
     Timer(const Duration(seconds: 1), () {
       isTimerCompleted = true;
       if (mounted) setState(() {});
@@ -94,81 +110,44 @@ class SplashScreenState extends State<SplashScreen>
     }
   }
 
-  void navigateToScreen() async {
-    if (context
-            .read<FetchSystemSettingsCubit>()
-            .getSetting(SystemSetting.maintenanceMode) ==
-        "1") {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed(Routes.maintenanceMode);
-        }
+  void navigateToScreen() {
+    if (!mounted || isNavigated) return;
+    isNavigated = true;
+
+    try {
+      if (context
+              .read<FetchSystemSettingsCubit>()
+              .getSetting(SystemSetting.maintenanceMode) ==
+          "1") {
+        Navigator.of(context).pushReplacementNamed(Routes.maintenanceMode);
+        return;
+      }
+    } catch (e) {
+      log("Maintenance mode check failed: $e");
+    }
+
+    if (HiveUtils.isUserFirstTime()) {
+      Navigator.of(context).pushReplacementNamed(Routes.onboarding);
+    } else if (HiveUtils.isUserAuthenticated() || HiveUtils.isUserSkip()) {
+      Navigator.of(context).pushReplacementNamed(Routes.main, arguments: {
+        'from': "main",
+        "slug": widget.itemSlug,
+        "sellerId": widget.sellerId
       });
-    } else if (HiveUtils.isUserFirstTime()) {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed(Routes.onboarding);
-        }
-      });
-    } else if (HiveUtils.isUserAuthenticated()) {
-      ///User should not navigate automatically to complete profile page after closing the app and re-opening without completing profile
-      ///In that case, user should only be set as authenticated when the user has completed his profile
-      ///and if not, he should be redirected to login page again
-      ///and not complete profile page.
-      // if ((HiveUtils.getUserDetails().name == null ||
-      //         HiveUtils.getUserDetails().name == "") ||
-      //     (HiveUtils.getUserDetails().email == null ||
-      //         HiveUtils.getUserDetails().email == "")) {
-      //   Future.delayed(
-      //     const Duration(seconds: 1),
-      //     () {
-      //       Navigator.pushReplacementNamed(
-      //         context,
-      //         Routes.completeProfile,
-      //         arguments: {
-      //           "from": "login",
-      //         },
-      //       );
-      //     },
-      //   );
-      // } else {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          //We pass slug only when the user is authenticated otherwise drop the slug
-          Navigator.of(context).pushReplacementNamed(Routes.main, arguments: {
-            'from': "main",
-            "slug": widget.itemSlug,
-            "sellerId": widget.sellerId
-          });
-        }
-      });
-      //}
     } else {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          if (HiveUtils.isUserSkip()) {
-            Navigator.of(context).pushReplacementNamed(Routes.main, arguments: {
-              'from': "main",
-              "slug": widget.itemSlug,
-              "sellerId": widget.sellerId
-            });
-          } else {
-            Navigator.of(context).pushReplacementNamed(Routes.login);
-          }
-        }
-      });
+      Navigator.of(context).pushReplacementNamed(Routes.login);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     navigateCheck();
+
     return hasInternet
         ? BlocListener<FetchLanguageCubit, FetchLanguageState>(
             listener: (context, state) {
               if (state is FetchLanguageSuccess) {
                 Map<String, dynamic> map = state.toMap();
-
                 var data = map['file_name'];
                 map['data'] = data;
                 map.remove("file_name");
@@ -176,9 +155,9 @@ class SplashScreenState extends State<SplashScreen>
                 HiveUtils.storeLanguage(map);
                 context.read<LanguageCubit>().changeLanguages(map);
                 isLanguageLoaded = true;
-                if (mounted) {
-                  setState(() {});
-                }
+                if (mounted) setState(() {});
+              } else if (state is FetchLanguageFailure) {
+                isLanguageLoaded = true;
               }
             },
             child: BlocListener<FetchSystemSettingsCubit,
@@ -191,10 +170,10 @@ class SplashScreenState extends State<SplashScreen>
                   getDefaultLanguage(
                       state.settings['data']['default_language']);
                   isSettingsLoaded = true;
-                  setState(() {});
-                }
-                if (state is FetchSystemSettingsFailure) {
+                  if (mounted) setState(() {});
+                } else if (state is FetchSystemSettingsFailure) {
                   log('${state.errorMessage}');
+                  isSettingsLoaded = true;
                 }
               },
               child: SafeArea(
@@ -217,14 +196,13 @@ class SplashScreenState extends State<SplashScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          alignment: AlignmentDirectional.center,
-                          padding: EdgeInsets.only(top: 10.0),
+                          alignment: Alignment.center,
                           width: 150,
                           height: 150,
                           child: UiUtils.getSvg(AppIcons.splashLogo),
                         ),
                         Padding(
-                          padding: EdgeInsets.only(top: 10.0),
+                          padding: const EdgeInsets.only(top: 10.0),
                           child: CustomText(
                             AppSettings.applicationName,
                             fontSize: context.font.xxLarge,

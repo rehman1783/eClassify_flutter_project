@@ -50,22 +50,23 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: '',
-    appId: '',
-    messagingSenderId: '',
-    projectId: '',
-    storageBucket: '',
+    apiKey: 'AIzaSyDBZEoor_MnhBq1_wFkR7_D4IEMNAROSj0',
+    appId: '1:406051761829:android:0ac302533577851947e74c',
+    messagingSenderId: '406051761829',
+    projectId: 'eclassify-flutter-project',
+    storageBucket: 'eclassify-flutter-project.appspot.com',
+
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: '',
-    appId: '',
-    messagingSenderId: '',
-    projectId: '',
-    storageBucket: '',
-    androidClientId: '',
-    iosClientId: '',
-    iosBundleId: '',
-  );
+  // static const FirebaseOptions ios = FirebaseOptions(
+  //   apiKey: '',
+  //   appId: '',
+  //   messagingSenderId: '',
+  //   projectId: '',
+  //   storageBucket: '',
+  //   androidClientId: '',
+  //   iosClientId: '',
+  //   iosBundleId: '',
+  // );
 
 }

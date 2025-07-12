@@ -15,7 +15,7 @@ if (localPropertiesFile.exists()) {
 
 def flutterRoot = localProperties.getProperty('flutter.sdk')
 if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+    throw new Exception("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
 }
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
@@ -39,6 +39,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.eclassify.wrteam"
     compileSdkVersion 35
+    ndkVersion '25.2.9519653'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
