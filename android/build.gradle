@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.gms:google-services:4.4.1' // ✅ REQUIRED for Firebase
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -6,6 +16,7 @@ allprojects {
             url "https://phonepe.mycloudrepo.io/public/repositories/phonepe-intentsdk-android"
         }
     }
+
     subprojects {
         afterEvaluate { project ->
             if (project.hasProperty('android')) {
@@ -19,11 +30,12 @@ allprojects {
     }
 }
 
-
 rootProject.buildDir = '../build'
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
 subprojects {
     project.evaluationDependsOn(':app')
 }

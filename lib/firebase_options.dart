@@ -58,15 +58,15 @@ class DefaultFirebaseOptions {
 
   );
 
-  // static const FirebaseOptions ios = FirebaseOptions(
-  //   apiKey: '',
-  //   appId: '',
-  //   messagingSenderId: '',
-  //   projectId: '',
-  //   storageBucket: '',
-  //   androidClientId: '',
-  //   iosClientId: '',
-  //   iosBundleId: '',
-  // );
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'dummy',
+    appId: 'dummy',
+    messagingSenderId: 'dummy',
+    projectId: 'dummy',
+    storageBucket: 'dummy',
+    androidClientId: 'dummy',
+    iosClientId: 'dummy',
+    iosBundleId: 'dummy',
+  );
 
 }

@@ -433,7 +433,7 @@ class UserProfileScreenState extends State<UserProfileScreen> {
       isLoading = true;
     });
     try {
-      var response = await context.read<AuthCubit>().updateuserdata(context,
+      var response = await context.read<AuthCubit>().updateUserData(context,
           name: nameController.text.trim(),
           email: emailController.text.trim(),
           fileUserimg: fileUserimg,

@@ -10,12 +10,21 @@ import 'package:eClassify/ui/screens/chat/chat_audio/globals.dart';
 import 'package:eClassify/utils/constant.dart';
 import 'package:eClassify/utils/hive_utils.dart';
 import 'package:eClassify/utils/notification/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:eClassify/firebase_options.dart'; // 🔥 Add this line for Firebase config
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() => initApp();
+/// ✅ Modified main() to support async Firebase initialization
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  initApp();
+}
 
 class EntryPoint extends StatefulWidget {
   const EntryPoint({
@@ -30,18 +39,21 @@ class EntryPointState extends State<EntryPoint> {
   @override
   void initState() {
     super.initState();
+
+    // ✅ Setup Firebase Messaging background handler
     FirebaseMessaging.onBackgroundMessage(
         NotificationService.onBackgroundMessageHandler);
+
+    // ✅ Any other initial logic
     ChatGlobals.init();
   }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-        providers: RegisterCubits().providers,
-        child: Builder(builder: (BuildContext context) {
-          return const App();
-        }));
+      providers: RegisterCubits().providers,
+      child: const App(),
+    );
   }
 }
 
@@ -55,13 +67,13 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   @override
   void initState() {
+    super.initState();
+
     context.read<LanguageCubit>().loadCurrentLanguage();
 
     AppTheme currentTheme = HiveUtils.getCurrentTheme();
 
     context.read<AppThemeCubit>().changeTheme(currentTheme);
-
-    super.initState();
   }
 
   @override
@@ -84,6 +96,7 @@ class _AppState extends State<App> {
                   ? TextDirection.rtl
                   : TextDirection.ltr;
             }
+
             return MediaQuery(
               data: MediaQuery.of(context).copyWith(
                 textScaler: const TextScaler.linear(1.0),
@@ -92,9 +105,7 @@ class _AppState extends State<App> {
                 textDirection: direction,
                 child: DevicePreview(
                   enabled: false,
-                  builder: (context) {
-                    return child!;
-                  },
+                  builder: (context) => child!,
                 ),
               ),
             );
@@ -111,8 +122,9 @@ class _AppState extends State<App> {
     );
   }
 
+  /// Handle fallback locale if language load fails
   dynamic loadLocalLanguageIfFail(LanguageState state) {
-    if ((state is LanguageLoader)) {
+    if (state is LanguageLoader) {
       return Locale(state.language['code']);
     } else if (state is LanguageLoadFail) {
       return const Locale("en");

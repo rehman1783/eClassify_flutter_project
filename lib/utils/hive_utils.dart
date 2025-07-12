@@ -4,6 +4,7 @@ import 'package:eClassify/data/model/user_model.dart';
 import 'package:eClassify/utils/constant.dart';
 import 'package:eClassify/utils/helper_utils.dart';
 import 'package:eClassify/utils/hive_keys.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
@@ -277,5 +278,17 @@ class HiveUtils {
     await Hive.box(HiveKeys.userDetailsBox).clear();
     await Hive.box(HiveKeys.historyBox).clear();
     HiveUtils.setUserIsAuthenticated(false);
+  }
+
+  static void setFirebaseUser(User user) async{
+    await Hive.box(HiveKeys.userDetailsBox).putAll({
+    "id": user.uid,
+    "name": user.displayName ?? "",
+    "email": user.email ?? "",
+    "profile": user.photoURL ?? "",
+  });
+
+  setUserIsAuthenticated(true);
+
   }
 }
