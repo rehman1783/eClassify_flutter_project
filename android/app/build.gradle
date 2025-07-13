@@ -39,7 +39,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace "com.eclassify.wrteam"
     compileSdkVersion 35
-    ndkVersion '25.2.9519653'
+    ndkVersion '26.3.11579264'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

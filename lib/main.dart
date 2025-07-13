@@ -20,9 +20,19 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 /// ✅ Modified main() to support async Firebase initialization
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+
+// try {
+//     print('Firebase apps in main(): ${Firebase.apps.length}');
+
+//     if (Firebase.apps.isEmpty) {
+//       await Firebase.initializeApp(
+//         options: DefaultFirebaseOptions.currentPlatform,
+//       );
+//     }
+//   } catch (e) {
+//     print('Firebase initialization error in main(): $e');
+//   }  
+
   initApp();
 }
 
@@ -65,16 +75,18 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  @override
-  void initState() {
-    super.initState();
+ @override
+void initState() {
+  super.initState();
 
+  Future.microtask(() {
     context.read<LanguageCubit>().loadCurrentLanguage();
 
     AppTheme currentTheme = HiveUtils.getCurrentTheme();
-
     context.read<AppThemeCubit>().changeTheme(currentTheme);
-  }
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +94,7 @@ class _AppState extends State<App> {
     return BlocBuilder<LanguageCubit, LanguageState>(
       builder: (context, languageState) {
         return MaterialApp(
-          initialRoute: Routes.splash,
+          initialRoute: Routes.login,
           navigatorKey: Constant.navigatorKey,
           title: Constant.appName,
           debugShowCheckedModeBanner: false,

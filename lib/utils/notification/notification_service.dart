@@ -182,16 +182,20 @@ class NotificationService {
   static void init(context) {
     registerListeners(context);
   }
+@pragma('vm:entry-point')
+static Future<void> onBackgroundMessageHandler(RemoteMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
+print('Firebase apps: ${Firebase.apps.length}');
 
-  @pragma('vm:entry-point')
-  static Future<void> onBackgroundMessageHandler(RemoteMessage message) async {
+  if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp();
-
-    if (message.notification == null) {
-      // Handle the notification data
-      handleNotification(message, true);
-    }
   }
+
+  if (message.notification == null) {
+    handleNotification(message, true);
+  }
+}
+
 
   static Future<void> foregroundNotificationHandler(
       BuildContext context) async {

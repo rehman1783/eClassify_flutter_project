@@ -17,45 +17,55 @@ PersonalizedInterestSettings personalizedInterestSettings =
 
 void initApp() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Setup Google Maps properly
   final GoogleMapsFlutterPlatform mapsImplementation =
       GoogleMapsFlutterPlatform.instance;
   if (mapsImplementation is GoogleMapsFlutterAndroid) {
     mapsImplementation.useAndroidViewSurface = false;
   }
 
+  // ✅ Error screen in release mode
   if (kReleaseMode) {
     ErrorWidget.builder = (FlutterErrorDetails flutterErrorDetails) {
-      return SomethingWentWrong(
-        error: flutterErrorDetails,
-      );
+      return SomethingWentWrong(error: flutterErrorDetails);
     };
   }
 
-  if (Firebase.apps.isNotEmpty) {
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
-  } else {
-    await Firebase.initializeApp();
+  // ✅ Firebase init with proper check
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } catch (e, st) {
+    // Error handled gracefully, print for debug
+    debugPrint('🔥 Firebase init error: $e');
+    debugPrintStack(stackTrace: st);
   }
 
-  MobileAds.instance.initialize();
+  // ✅ AdMob init
+  await MobileAds.instance.initialize();
 
+  // ✅ Hive setup
   await Hive.initFlutter();
-  await Hive.openBox(HiveKeys.userDetailsBox);
-  await Hive.openBox(HiveKeys.translationsBox);
-  await Hive.openBox(HiveKeys.authBox);
-  await Hive.openBox(HiveKeys.languageBox);
-  await Hive.openBox(HiveKeys.themeBox);
-  await Hive.openBox(HiveKeys.svgBox);
-  await Hive.openBox(HiveKeys.jwtToken);
-  await Hive.openBox(HiveKeys.historyBox);
+  await Future.wait([
+    Hive.openBox(HiveKeys.userDetailsBox),
+    Hive.openBox(HiveKeys.translationsBox),
+    Hive.openBox(HiveKeys.authBox),
+    Hive.openBox(HiveKeys.languageBox),
+    Hive.openBox(HiveKeys.themeBox),
+    Hive.openBox(HiveKeys.svgBox),
+    Hive.openBox(HiveKeys.jwtToken),
+    Hive.openBox(HiveKeys.historyBox),
+  ]);
 
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then(
-    (_) async {
-      SystemChrome.setSystemUIOverlayStyle(
-          const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
-
-      runApp(const EntryPoint());
-    },
+  // ✅ Lock orientation & launch app
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
+
+  runApp(const EntryPoint());
 }
